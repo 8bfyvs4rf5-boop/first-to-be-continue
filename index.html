@@ -68,7 +68,12 @@ nav{
     padding:10px 16px;
     z-index:100;
     transition:background .25s;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
 }
+
+nav::-webkit-scrollbar{ display:none; }
 
 .nav-btn{
     padding:8px 18px;
