@@ -122,11 +122,26 @@ nav{
 
 .date{ color:var(--text-muted); margin-bottom:10px; }
 
+/* ── 줌 뷰포트 ── */
+.zoom-vp{
+    width:100%;
+    overflow:hidden;
+    touch-action:none;
+    position:relative;
+    cursor:grab;
+}
+.zoom-vp:active{ cursor:grabbing; }
+
 svg{
     width:100%;
     max-width:1100px;
     height:auto;
     margin-top:20px;
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
+    transform-origin:0 0;
+    will-change:transform;
 }
 
 .seat{ fill:var(--seat-fill); stroke:var(--seat-stroke); stroke-width:2; }
@@ -156,15 +171,22 @@ svg{
 
 .single-image-wrap{
     width:100%;
+    overflow:hidden;
+    touch-action:none;
+    position:relative;
     text-align:center;
+    cursor:grab;
 }
+.single-image-wrap:active{ cursor:grabbing; }
 
 .single-image-wrap img{
     max-width:100%;
     max-height:80vh;
     border-radius:12px;
     box-shadow:0 4px 20px var(--card-shadow);
-    cursor:pointer;
+    display:inline-block;
+    transform-origin:0 0;
+    will-change:transform;
 }
 
 .empty-msg{
@@ -221,7 +243,9 @@ svg{
 <div id="page-home" class="page active">
     <h1>17분임 오늘의 자리배치</h1>
     <div class="date" id="today"></div>
-    <svg id="seatMap" viewBox="0 0 1100 1040"></svg>
+    <div class="zoom-vp" id="svgWrap">
+        <svg id="seatMap" viewBox="0 0 1100 1040"></svg>
+    </div>
 </div>
 
 <!-- 대강당 자리배치도 -->
@@ -395,6 +419,86 @@ function draw(){
 
 draw();
 
+
+/* ── 핀치줌 & 드래그 ── */
+function initPinchZoom(vp, content) {
+    let scale = 1, tx = 0, ty = 0;
+    let t1 = null, t2 = null;
+
+    function apply() {
+        content.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+    }
+
+    function clamp() {
+        const vr = vp.getBoundingClientRect();
+        const cr = content.getBoundingClientRect();
+        const cw = content.offsetWidth  || cr.width;
+        const ch = content.offsetHeight || cr.height;
+        if (scale <= 1) { scale = 1; tx = 0; ty = 0; return; }
+        const minTx = vr.width  - cw * scale;
+        const minTy = vr.height - ch * scale;
+        tx = Math.min(0, Math.max(minTx, tx));
+        ty = Math.min(0, Math.max(minTy, ty));
+    }
+
+    vp.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const a = e.touches[0], b = e.touches[1];
+            const vr = vp.getBoundingClientRect();
+            t2 = {
+                dist: Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY),
+                midX: (a.clientX + b.clientX) / 2 - vr.left,
+                midY: (a.clientY + b.clientY) / 2 - vr.top,
+                scale, tx, ty
+            };
+            t1 = null;
+        } else if (e.touches.length === 1) {
+            t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx, ty };
+            t2 = null;
+        }
+    }, { passive: false });
+
+    vp.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (e.touches.length === 2 && t2) {
+            const a = e.touches[0], b = e.touches[1];
+            const vr = vp.getBoundingClientRect();
+            const newDist = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+            const newScale = Math.min(6, Math.max(1, t2.scale * (newDist / t2.dist)));
+            const newMidX = (a.clientX + b.clientX) / 2 - vr.left;
+            const newMidY = (a.clientY + b.clientY) / 2 - vr.top;
+            const ratio = newScale / t2.scale;
+            tx = newMidX - (t2.midX - t2.tx) * ratio;
+            ty = newMidY - (t2.midY - t2.ty) * ratio;
+            scale = newScale;
+            clamp();
+            apply();
+        } else if (e.touches.length === 1 && t1 && scale > 1) {
+            tx = t1.tx + e.touches[0].clientX - t1.x;
+            ty = t1.ty + e.touches[0].clientY - t1.y;
+            clamp();
+            apply();
+        }
+    }, { passive: false });
+
+    vp.addEventListener('touchend', e => {
+        if (e.touches.length === 0) {
+            t1 = null; t2 = null;
+            if (scale < 1.05) { scale = 1; tx = 0; ty = 0; apply(); }
+        } else if (e.touches.length === 1) {
+            t2 = null;
+            t1 = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx, ty };
+        }
+    });
+}
+
+/* 초기화 */
+initPinchZoom(document.getElementById('svgWrap'), document.getElementById('seatMap'));
+document.querySelectorAll('.single-image-wrap').forEach(wrap => {
+    const img = wrap.querySelector('img');
+    if (img) initPinchZoom(wrap, img);
+});
 
 /* ── 라이트박스 ── */
 function openLightbox(src){
