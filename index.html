@@ -50,6 +50,11 @@ svg{
     font-weight:bold;
 }
 
+.dday{
+    font-size:11px;
+    fill:#888;
+}
+
 .table{
     fill:white;
     stroke:#333;
@@ -75,11 +80,42 @@ svg{
 
 <svg
 id="seatMap"
-viewBox="0 0 1100 1000"> </svg>
+viewBox="0 0 1100 1040"> </svg>
 
 </div>
 
 <script>
+
+const BIRTHDAYS = {
+    "황민중":[3,4],
+    "위성군":[7,17],
+    "이현정":[1,13],
+    "김도원":[6,1],
+    "이예지":[5,8],
+    "정현구":[8,24],
+    "정수민":[7,19],
+    "고은지":[11,11],
+    "박상우":[6,5],
+    "조혜연":[5,10],
+    "이남기":[10,15],
+    "강예나":[4,21],
+    "최서린":[8,15],
+    "최민기":[10,11],
+    "김우빈":[6,19]
+};
+
+function getDday(name){
+    if(!BIRTHDAYS[name]) return "생일을 알려주세요";
+    const [month,day] = BIRTHDAYS[name];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    let bday = new Date(today.getFullYear(), month-1, day);
+    if(bday <= today){
+        bday = new Date(today.getFullYear()+1, month-1, day);
+    }
+    const diff = Math.round((bday-today)/(1000*60*60*24));
+    return diff===0 ? "🎂 생일" : "D-"+diff+"일";
+}
 
 const MEMBERS = [
 "강예나",
@@ -168,7 +204,7 @@ function draw(){
     table.setAttribute("x",350);
     table.setAttribute("y",150);
     table.setAttribute("width",400);
-    table.setAttribute("height",650);
+    table.setAttribute("height",730);
     table.setAttribute("rx",20);
     table.setAttribute("class","table");
 
@@ -196,7 +232,7 @@ function draw(){
         createSeat(
             name,
             170,
-            150 + index*80
+            150 + index*90
         );
 
     });
@@ -206,7 +242,7 @@ function draw(){
         createSeat(
             name,
             810,
-            150 + index*80
+            150 + index*90
         );
 
     });
@@ -214,7 +250,7 @@ function draw(){
     const entrance = create("text");
 
     entrance.setAttribute("x",550);
-    entrance.setAttribute("y",930);
+    entrance.setAttribute("y",1010);
     entrance.setAttribute("text-anchor","middle");
     entrance.setAttribute("class","entrance");
 
@@ -230,7 +266,7 @@ function createSeat(name,x,y){
     rect.setAttribute("x",x);
     rect.setAttribute("y",y);
     rect.setAttribute("width",120);
-    rect.setAttribute("height",50);
+    rect.setAttribute("height",72);
     rect.setAttribute("rx",10);
     rect.setAttribute("class","seat");
     rect.setAttribute("id","seat-"+name);
@@ -240,13 +276,24 @@ function createSeat(name,x,y){
     const text = create("text");
 
     text.setAttribute("x",x+60);
-    text.setAttribute("y",y+32);
+    text.setAttribute("y",y+26);
     text.setAttribute("text-anchor","middle");
     text.setAttribute("class","label");
 
     text.textContent=name;
 
     svg.appendChild(text);
+
+    const ddayText = create("text");
+
+    ddayText.setAttribute("x",x+60);
+    ddayText.setAttribute("y",y+52);
+    ddayText.setAttribute("text-anchor","middle");
+    ddayText.setAttribute("class","dday");
+
+    ddayText.textContent=getDday(name);
+
+    svg.appendChild(ddayText);
 }
 
 draw();
