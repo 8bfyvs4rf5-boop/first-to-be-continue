@@ -55,7 +55,7 @@ body{
     transition:background .25s,color .25s;
 }
 
-/* ── 네비게이션 (상단 수평 바) ── */
+/* ── 네비게이션 ── */
 nav{
     position:fixed;
     top:0; left:0;
@@ -113,14 +113,76 @@ nav{
 
 /* ── 홈 ── */
 #page-home{
-    text-align:center;
     padding-left:0;
-    padding-top:54px;
+    padding-top:44px;
 }
 
-#page-home h1{ margin-bottom:8px; }
-
 .date{ color:var(--text-muted); margin-bottom:10px; }
+
+/* ── 종이뽑기 화면 ── */
+#lottery-screen{
+    text-align:center;
+    padding:30px 20px 40px;
+}
+
+#lottery-screen h1{ margin-bottom:6px; }
+
+.lottery-wrap{
+    display:inline-block;
+    margin:18px 0 10px;
+    transform-origin:center 85%;
+}
+
+@keyframes lotteryShake{
+    0%,100%{ transform:rotate(0deg) translateY(0); }
+    12%    { transform:rotate(-9deg) translateY(-10px); }
+    28%    { transform:rotate(9deg)  translateY(-14px); }
+    44%    { transform:rotate(-6deg) translateY(-6px);  }
+    60%    { transform:rotate(7deg)  translateY(-11px); }
+    76%    { transform:rotate(-4deg) translateY(-4px);  }
+    90%    { transform:rotate(3deg)  translateY(-7px);  }
+}
+
+.lottery-wrap.shake{
+    animation:lotteryShake 1s ease-in-out;
+}
+
+#draw-btn{
+    display:block;
+    margin:16px auto 0;
+    padding:14px 48px;
+    font-size:20px;
+    font-weight:bold;
+    font-family:inherit;
+    background:#1976d2;
+    color:#fff;
+    border:none;
+    border-radius:50px;
+    cursor:pointer;
+    box-shadow:0 4px 18px rgba(25,118,210,.4);
+    transition:transform .15s,box-shadow .15s,background .15s;
+}
+
+#draw-btn:hover:not(:disabled){
+    transform:translateY(-2px);
+    box-shadow:0 7px 22px rgba(25,118,210,.5);
+    background:#1565c0;
+}
+
+#draw-btn:active:not(:disabled){ transform:translateY(0); }
+
+#draw-btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+/* ── 자리배치 결과 화면 ── */
+#seat-result{
+    text-align:center;
+    padding-top:10px;
+}
+
+#seat-result h1{ margin-bottom:6px; }
 
 /* ── 줌 뷰포트 ── */
 .zoom-vp{
@@ -132,7 +194,7 @@ nav{
 }
 .zoom-vp:active{ cursor:grabbing; }
 
-svg{
+svg.seat-map{
     width:100%;
     max-width:1100px;
     height:auto;
@@ -167,7 +229,6 @@ svg{
     font-size:22px;
     color:var(--h2);
 }
-
 
 .single-image-wrap{
     width:100%;
@@ -232,20 +293,85 @@ svg{
 
 <!-- 네비게이션 -->
 <nav>
-    <button class="nav-btn active"  onclick="showPage('home',this)">홈(자리배치)</button>
-    <button class="nav-btn"         onclick="showPage('hall',this)">대강당 자리배치도</button>
-    <button class="nav-btn"         onclick="showPage('meal',this)">식사순서</button>
-    <button class="nav-btn"         onclick="showPage('schedule',this)">과제제출일정</button>
+    <button class="nav-btn active" onclick="showPage('home',this)">홈(자리배치)</button>
+    <button class="nav-btn"        onclick="showPage('hall',this)">대강당 자리배치도</button>
+    <button class="nav-btn"        onclick="showPage('meal',this)">식사순서</button>
+    <button class="nav-btn"        onclick="showPage('schedule',this)">과제제출일정</button>
     <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">🌙 다크모드</button>
 </nav>
 
 <!-- 홈 -->
 <div id="page-home" class="page active">
-    <h1>17분임 오늘의 자리배치</h1>
-    <div class="date" id="today"></div>
-    <div class="zoom-vp" id="svgWrap">
-        <svg id="seatMap" viewBox="0 0 1100 1040"></svg>
+
+    <!-- ① 첫 화면: 종이뽑기 -->
+    <div id="lottery-screen">
+        <h1>17분임 오늘의 자리배치</h1>
+        <div class="date" id="today"></div>
+
+        <div class="lottery-wrap" id="lotteryWrap">
+            <svg viewBox="0 0 320 310" width="280" height="272" style="overflow:visible">
+                <!-- 종이들 (먼저 그려서 컵 뒤로 들어가는 효과) -->
+                <g id="papers">
+                    <!-- 종이1: 분홍 -->
+                    <g transform="rotate(-22 102 150)">
+                        <rect x="91" y="50" width="22" height="100" rx="4" fill="#FF9AA2"/>
+                        <rect x="91" y="50" width="22" height="14" rx="4" fill="#FF6B7A"/>
+                        <text x="102" y="100" text-anchor="middle" font-size="19" fill="white" font-weight="bold" font-family="'Malgun Gothic',sans-serif">?</text>
+                    </g>
+                    <!-- 종이2: 민트 -->
+                    <g transform="rotate(-7 131 150)">
+                        <rect x="120" y="38" width="22" height="112" rx="4" fill="#B5EAD7"/>
+                        <rect x="120" y="38" width="22" height="14" rx="4" fill="#7DC4A7"/>
+                        <text x="131" y="90" text-anchor="middle" font-size="19" fill="white" font-weight="bold" font-family="'Malgun Gothic',sans-serif">?</text>
+                    </g>
+                    <!-- 종이3: 복숭아 (가운데, 가장 높게) -->
+                    <g transform="rotate(0 160 150)">
+                        <rect x="149" y="32" width="22" height="118" rx="4" fill="#FFDAC1"/>
+                        <rect x="149" y="32" width="22" height="14" rx="4" fill="#FFB68C"/>
+                        <text x="160" y="84" text-anchor="middle" font-size="19" fill="white" font-weight="bold" font-family="'Malgun Gothic',sans-serif">?</text>
+                    </g>
+                    <!-- 종이4: 라벤더 -->
+                    <g transform="rotate(9 189 150)">
+                        <rect x="178" y="38" width="22" height="112" rx="4" fill="#C7CEEA"/>
+                        <rect x="178" y="38" width="22" height="14" rx="4" fill="#9AA0D4"/>
+                        <text x="189" y="90" text-anchor="middle" font-size="19" fill="white" font-weight="bold" font-family="'Malgun Gothic',sans-serif">?</text>
+                    </g>
+                    <!-- 종이5: 연한 주황 -->
+                    <g transform="rotate(24 216 150)">
+                        <rect x="205" y="50" width="22" height="100" rx="4" fill="#FFE5CC"/>
+                        <rect x="205" y="50" width="22" height="14" rx="4" fill="#FFB87A"/>
+                        <text x="216" y="100" text-anchor="middle" font-size="19" fill="white" font-weight="bold" font-family="'Malgun Gothic',sans-serif">?</text>
+                    </g>
+                </g>
+
+                <!-- 컵 몸통 (종이 위에 덮어서 아랫부분 숨김) -->
+                <path d="M 72 148 L 248 148 L 224 286 Q 160 296 96 286 Z" fill="#D4A574"/>
+
+                <!-- 컵 테두리 -->
+                <rect x="68" y="135" width="184" height="20" rx="8" fill="#C8955A"/>
+                <!-- 테두리 하이라이트 -->
+                <rect x="72" y="137" width="176" height="8" rx="4" fill="#E8C080" opacity="0.5"/>
+
+                <!-- 컵 그림자/패턴 -->
+                <path d="M 96 168 L 104 282" stroke="rgba(0,0,0,0.07)" stroke-width="8" stroke-linecap="round"/>
+
+                <!-- 컵 텍스트 -->
+                <text x="160" y="228" text-anchor="middle" font-size="15" fill="rgba(255,255,255,0.55)" font-weight="bold" font-family="'Malgun Gothic',sans-serif">제비뽑기</text>
+            </svg>
+        </div>
+
+        <button id="draw-btn" onclick="drawSeat()">🎋 뽑기!</button>
     </div>
+
+    <!-- ② 결과 화면 -->
+    <div id="seat-result" style="display:none">
+        <h1>17분임 오늘의 자리배치</h1>
+        <div class="date" id="today-result"></div>
+        <div class="zoom-vp" id="svgWrap">
+            <svg id="seatMap" class="seat-map" viewBox="0 0 1100 1040"></svg>
+        </div>
+    </div>
+
 </div>
 
 <!-- 대강당 자리배치도 -->
@@ -312,9 +438,22 @@ function showPage(id, btn){
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('page-'+id).classList.add('active');
     btn.classList.add('active');
+
+    if(id === 'home'){
+        const lScreen = document.getElementById('lottery-screen');
+        const sResult = document.getElementById('seat-result');
+        lScreen.style.display    = '';
+        lScreen.style.opacity    = '1';
+        lScreen.style.transition = '';
+        sResult.style.display    = 'none';
+        sResult.style.opacity    = '';
+        sResult.style.transition = '';
+        document.getElementById('draw-btn').disabled = false;
+        document.getElementById('lotteryWrap').classList.remove('shake');
+    }
 }
 
-/* ── 자리배치 ── */
+/* ── 자리배치 데이터 ── */
 const BIRTHDAYS = {
     "황민중":[3,4],  "위성군":[7,17], "이현정":[1,13],
     "김도원":[6,1],  "이예지":[5,8],  "정현구":[8,24],
@@ -366,6 +505,7 @@ const seats = {
 
 document.getElementById("today").innerText = new Date().toLocaleDateString();
 
+/* ── 좌석 그리기 ── */
 const svg    = document.getElementById("seatMap");
 const SVG_NS = "http://www.w3.org/2000/svg";
 function create(tag){ return document.createElementNS(SVG_NS,tag); }
@@ -417,8 +557,38 @@ function draw(){
     svg.appendChild(entrance);
 }
 
-draw();
+/* ── 뽑기 버튼 ── */
+function drawSeat(){
+    const btn  = document.getElementById('draw-btn');
+    const wrap = document.getElementById('lotteryWrap');
+    btn.disabled = true;
+    wrap.classList.add('shake');
 
+    wrap.addEventListener('animationend', function handler(){
+        wrap.removeEventListener('animationend', handler);
+
+        const lScreen = document.getElementById('lottery-screen');
+        const sResult = document.getElementById('seat-result');
+
+        lScreen.style.transition = 'opacity 0.35s';
+        lScreen.style.opacity    = '0';
+
+        setTimeout(() => {
+            lScreen.style.display = 'none';
+
+            document.getElementById('today-result').innerText = new Date().toLocaleDateString();
+            draw();
+
+            sResult.style.opacity    = '0';
+            sResult.style.display    = 'block';
+            sResult.style.transition = 'opacity 0.4s';
+
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                sResult.style.opacity = '1';
+            }));
+        }, 350);
+    });
+}
 
 /* ── 핀치줌 & 드래그 ── */
 function initPinchZoom(vp, content) {
@@ -431,9 +601,8 @@ function initPinchZoom(vp, content) {
 
     function clamp() {
         const vr = vp.getBoundingClientRect();
-        const cr = content.getBoundingClientRect();
-        const cw = content.offsetWidth  || cr.width;
-        const ch = content.offsetHeight || cr.height;
+        const cw = content.offsetWidth;
+        const ch = content.offsetHeight;
         if (scale <= 1) { scale = 1; tx = 0; ty = 0; return; }
         const minTx = vr.width  - cw * scale;
         const minTy = vr.height - ch * scale;
@@ -464,10 +633,10 @@ function initPinchZoom(vp, content) {
         if (e.touches.length === 2 && t2) {
             const a = e.touches[0], b = e.touches[1];
             const vr = vp.getBoundingClientRect();
-            const newDist = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+            const newDist  = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
             const newScale = Math.min(6, Math.max(1, t2.scale * (newDist / t2.dist)));
-            const newMidX = (a.clientX + b.clientX) / 2 - vr.left;
-            const newMidY = (a.clientY + b.clientY) / 2 - vr.top;
+            const newMidX  = (a.clientX + b.clientX) / 2 - vr.left;
+            const newMidY  = (a.clientY + b.clientY) / 2 - vr.top;
             const ratio = newScale / t2.scale;
             tx = newMidX - (t2.midX - t2.tx) * ratio;
             ty = newMidY - (t2.midY - t2.ty) * ratio;
@@ -493,7 +662,6 @@ function initPinchZoom(vp, content) {
     });
 }
 
-/* 초기화 */
 initPinchZoom(document.getElementById('svgWrap'), document.getElementById('seatMap'));
 document.querySelectorAll('.single-image-wrap').forEach(wrap => {
     const img = wrap.querySelector('img');
